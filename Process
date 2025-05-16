@@ -1,0 +1,155 @@
+Projet VMware – TECH4U  
+Date : 16.05.2025  
+Auteurs : Marc & Pierre-Henry
+
+---
+
+## 1. Présentation de l’entreprise et du projet
+
+**TECH4U** est une PME de 50 employés spécialisée dans le développement de logiciels. L’entreprise, en pleine croissance, souhaite moderniser son infrastructure informatique pour gagner en flexibilité, sécurité et simplicité de gestion. L’objectif est de virtualiser l’ensemble de l’environnement avec VMware ESXi et vSphere, tout en maintenant des services Windows Server et Linux.
+
+---
+
+## 2. Contexte technique
+
+L’infrastructure actuelle repose sur des serveurs physiques obsolètes, limitant l’évolution et la disponibilité. La virtualisation permettra de centraliser la gestion, d’améliorer la résilience et de réduire les coûts.
+
+---
+
+## 3. Objectifs du projet
+
+- Déployer une infrastructure virtualisée complète avec VMware.
+- Créer un environnement fonctionnel, réaliste et sécurisé.
+- Mettre en place plusieurs VMs pour les services essentiels :
+    - Contrôleur de domaine (Windows Server)
+    - Serveur de fichiers (Windows)
+    - Serveur web (Linux)
+    - Solution de sauvegarde/restauration
+- Garantir haute disponibilité et sécurité.
+- Structurer le réseau avec IP fixes, VLAN et pare-feu.
+- Déployer une architecture réseau robuste.
+
+---
+
+## 4. Résultats attendus
+
+À l’issue du projet, TECH4U disposera d’une infrastructure moderne, virtualisée et sécurisée, avec gestion simplifiée et protection accrue des données. Le réseau sera optimisé avec VLAN, pare-feu et IP fixes pour assurer la haute disponibilité.
+
+---
+
+## 5. Spécifications pour le schéma
+
+### Pôles et utilisateurs
+- 4 pôles : Développement, Marketing, Support, Administration
+- 50 employés (ex : 12 Dev, 13 Marketing, 13 Support, 12 Admin)
+
+### Plan d’adressage IP
+- Plage privée : 192.168.X.0/24
+- VLAN 10 – Dev : 192.168.10.0/24
+- VLAN 20 – Marketing : 192.168.20.0/24
+- VLAN 30 – Support : 192.168.30.0/24
+- VLAN 40 – Admin : 192.168.40.0/24
+- VLAN 50 – Infrastructure : 192.168.50.0/24
+
+### Machines Virtuelles principales
+- VM-AD (Windows Server) : DNS, DHCP, Contrôleur de domaine – 192.168.50.10
+- VM-Linux (Web + DNS secondaire) – 192.168.50.20
+- VM-Supervision (Zabbix) – 192.168.50.30
+- VM-Windows 10 Client (optionnel) – 192.168.10.100
+
+---
+
+## 6. Architecture virtualisée
+
+- 2 hôtes ESXi (ESXi1, ESXi2) gérés par vCenter (centralisation, HA)
+- Chaque hôte héberge les mêmes VMs (Linux CMS, Windows AD, Zabbix, serveur de fichiers)
+- SAN partagé connecté aux deux hôtes pour redondance et migration des VMs
+
+---
+
+## 7. Synthèse de la configuration réseau
+
+- vCenter : gestion centralisée, HA
+- ESXi1 & ESXi2 : hébergement des VMs
+- SAN : stockage partagé pour redondance et migration
+
+---
+
+## 8. Documentation technique
+
+### 8.1 Création des VMs principales
+- VM TrueNAS (2 vCPU, 4–8 Go RAM, 2 disques)
+- 2 VMs ESXi (4 vCPU, 8 Go RAM, nested virtualization)
+- VM vCenter Server (12 Go RAM min)
+
+### 8.2 Configuration du SAN virtuel
+- Installer TrueNAS/FreeNAS
+- Créer un volume iSCSI ou NFS
+- Partager l’accès avec les ESXi
+
+### 8.3 Installation ESXi dans les VMs
+- Démarrer les VMs ESXi avec l’ISO
+- Configurer IP, gateway, DNS
+
+### 8.4 Connexion des ESXi au SAN
+- Créer un port VMkernel dédié iSCSI/NFS
+- Activer l’adaptateur iSCSI logiciel
+- Ajouter la cible iSCSI/NFS
+- Scanner et créer le datastore partagé
+
+### 8.5 Déploiement du vCenter Server
+- Installer VCSA via ISO
+- Stocker la VM vCenter sur le SAN si possible
+- Configurer SSO, réseau
+
+### 8.6 Ajout des hôtes ESXi dans vCenter
+- Ajouter ESXi 01 et 02
+- Créer un cluster (optionnel)
+- Activer HA, vMotion
+
+### 8.7 Création de VMs de test
+- Créer des VMs sur le SAN partagé
+- Tester vMotion et la tolérance de panne
+
+---
+
+## 9. Partage du volume SAN
+
+### Option A – iSCSI (recommandé)
+1. Sharing > Block (iSCSI) > Wizard
+2. Nommer le partage (ex : ESXiLUN)
+3. Sélectionner le pool (SANPOOL)
+4. Ajouter les IPs ESXi autorisées
+5. Terminer le wizard
+6. Activer le service iSCSI
+
+### Option B – NFS
+1. Sharing > Unix (NFS) > Add
+2. Chemin : /SANPOOL
+3. Autoriser les IPs ESXi
+4. Activer le service NFS
+
+---
+
+## 10. Connexion des hôtes ESXi au SAN
+
+- Storage > Adapters (iSCSI)
+- Ajouter l’IP de TrueNAS comme target
+- Rescan > le disque partagé apparaît
+- Créer un nouveau datastore
+
+---
+
+## 11. Liens utiles
+
+- [Installer ESXi 7](https://www.networks-it.fr/installation-de-vmware-esxi-7-0/)
+- [Installer Debian 12](https://www.debian.org/releases/stable/i386/index.fr.html)
+- [Installer un CMS](https://www.it-connect.fr/installation-de-wordpress-sous-linux/)
+- [Installer Windows Server](https://www.it-connect.fr/tuto-installer-windows-server-2025/)
+- [Configurer une AD](https://rdr-it.com/windows-serveur-2025-installer-le-role-adds-et-configurerun-domaine-active-directory/)
+- [Installer Zabbix](https://passandsecure.fr/install_zabbix_for_debian12_almalinux_9_4)
+- [Créer une redondance ESXi](https://docs.khroners.fr/books/vmware/page/esxi-7-configurerson-premier-reseau-de-vms)
+- [Configurer un SAN](https://www.it-connect.fr/migration-a-chaud-de-machines-virtuelles-avecvmware-vsphere-et-le-vmotion%EF%BB%BF/)
+- [Installer vCenter](https://www.networks-it.fr/installation-de-vmware-vcenter-7-0-sur-unesxi-7-0/)
+
+---
